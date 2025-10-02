@@ -1,0 +1,20 @@
+version: "3.9"
+services:
+  ryu:
+    image: python:3.9-slim
+    working_dir: /app
+    volumes:
+    - ./controller:/app
+    command: sh -c "pip install --no-cache-dir -r requirements.txt && ryu-manager /app/acl_controller.py"
+    ports:
+    - "6653:6653"
+
+  mininet:
+    image: iwaseyusuke/mininet
+    privileged: true
+    depends_on:
+    - ryu
+    working_dir: /topology
+    volumes:
+    - ./topology:/topology
+    command: sh -c "python3 /topology/acl_topology.py"
