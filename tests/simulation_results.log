@@ -1,12 +1,22 @@
-10.0.2.10->10.0.10.10 TCP:80
-/bin/sh: 1: docker: Permission denied
+=== SDN ACL Controller Simulation Results ===
 
-10.0.1.10->10.0.10.10 TCP:80
-/bin/sh: 1: docker: Permission denied
+Test: Guest(10.0.2.10) -> Admin(10.0.10.10) | TCP:80
+/bin/sh: 1: docker: not found
 
-10.0.1.10->10.0.1.11 ICMP:
-/bin/sh: 1: docker: Permission denied
+------------------------------------------------------------
 
-10.0.2.11->10.0.10.10 TCP:22
-/bin/sh: 1: docker: Permission denied
+Test: Student(10.0.1.10) -> Admin(10.0.10.10) | TCP:80
+/bin/sh: 1: docker: not found
+
+------------------------------------------------------------
+
+Test: Student(10.0.1.10) -> Student(10.0.1.11) | ICMP
+/bin/sh: 1: docker: not found
+
+------------------------------------------------------------
+
+Test: Guest(10.0.2.11) -> Admin(10.0.10.10) | TCP:22
+/bin/sh: 1: docker: not found
+
+------------------------------------------------------------
 

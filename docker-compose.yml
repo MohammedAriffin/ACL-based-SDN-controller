@@ -1,31 +1,52 @@
 services:
   ryu:
     image: python:3.9-slim
+    container_name: ryu-controller
     working_dir: /app
     volumes:
-      - ./controller:/app
-    command: sh -c "pip install --no-cache-dir -r requirements.txt && ryu-manager /app/acl_controller.py"
+      - ./controller:/app/controller
+      - ./requirements.txt:/app/requirements.txt
+    command: sh -c "pip install --no-cache-dir -r /app/requirements.txt && ryu-manager /app/controller/acl_controller.py --ofp-tcp-listen-port 6653"
     ports:
-      - "8000:8000"  # Expose Ryu REST API port
+      - "6653:6653"  # OpenFlow port
+      - "8080:8080"  # Ryu REST API port (if needed)
+    networks:
+      sdn_network:
+        ipv4_address: 172.25.0.2
 
   mininet:
     image: iwaseyusuke/mininet
+    container_name: mininet-topo
     privileged: true
     depends_on:
       - ryu
     working_dir: /topology
     volumes:
       - ./topology:/topology
-    command: sh -c "python3 /topology/acl_topology.py"
+    command: sh -c "sleep 5 && python3 /topology/acl_topology.py"
+    networks:
+      sdn_network:
+        ipv4_address: 172.25.0.3
+    stdin_open: true
+    tty: true
 
   simulator:
     image: python:3.9-slim
+    container_name: test-simulator
     working_dir: /simulator
     volumes:
       - ./tests:/simulator
-      - /var/run/docker.sock:/var/run/docker.sock  # Mount Docker socket for docker CLI access
-      - /usr/bin/docker:/usr/bin/docker            # Mount Docker client binary for command execution
     depends_on:
       - ryu
       - mininet
-    command: sh -c "python3 /simulator/stimulate_user.py && tail -f /dev/null"
+    command: sh -c "sleep 10 && python3 /simulator/stimulate_user.py && tail -f /dev/null"
+    networks:
+      sdn_network:
+        ipv4_address: 172.25.0.4
+
+networks:
+  sdn_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
