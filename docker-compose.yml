@@ -1,20 +1,31 @@
-version: "3.9"
 services:
   ryu:
     image: python:3.9-slim
     working_dir: /app
     volumes:
-    - ./controller:/app
+      - ./controller:/app
     command: sh -c "pip install --no-cache-dir -r requirements.txt && ryu-manager /app/acl_controller.py"
     ports:
-    - "6653:6653"
+      - "8000:8000"  # Expose Ryu REST API port
 
   mininet:
     image: iwaseyusuke/mininet
     privileged: true
     depends_on:
-    - ryu
+      - ryu
     working_dir: /topology
     volumes:
-    - ./topology:/topology
+      - ./topology:/topology
     command: sh -c "python3 /topology/acl_topology.py"
+
+  simulator:
+    image: python:3.9-slim
+    working_dir: /simulator
+    volumes:
+      - ./tests:/simulator
+      - /var/run/docker.sock:/var/run/docker.sock  # Mount Docker socket for docker CLI access
+      - /usr/bin/docker:/usr/bin/docker            # Mount Docker client binary for command execution
+    depends_on:
+      - ryu
+      - mininet
+    command: sh -c "python3 /simulator/stimulate_user.py && tail -f /dev/null"

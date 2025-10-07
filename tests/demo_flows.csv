@@ -1,0 +1,5 @@
+"src_ip","dst_ip","protocol","port","role_src","role_dst"
+"10.0.2.10","10.0.10.10","TCP","80","Guest","Admin"
+"10.0.1.10","10.0.10.10","TCP","80","Student","Admin"
+"10.0.1.10","10.0.1.11","ICMP","","Student","Student"
+"10.0.2.11","10.0.10.10","TCP","22","Guest","Admin"

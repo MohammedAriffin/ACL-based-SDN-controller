@@ -1,0 +1,37 @@
+{
+  "roles": {
+    "student": ["10.0.1.10", "10.0.1.11"],
+    "guest": ["10.0.2.10", "10.0.2.11"],
+    "admin": ["10.0.10.10"]
+  },
+  "acls": [
+    {
+      "src_role": "student",
+      "dst_role": "admin",
+      "protocol": "ANY",
+      "port": "ANY",
+      "action": "deny"
+    },
+    {
+      "src_role": "guest",
+      "dst_role": "admin",
+      "protocol": "TCP",
+      "port": "80",
+      "action": "allow"
+    },
+    {
+      "src_role": "guest",
+      "dst_role": "admin",
+      "protocol": "TCP",
+      "port": "22",
+      "action": "deny"
+    },
+    {
+      "src_role": "student",
+      "dst_role": "student",
+      "protocol": "ICMP",
+      "port": "ANY",
+      "action": "deny"
+    }
+  ]
+}
