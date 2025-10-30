@@ -1,54 +1,31 @@
-# syntax=docker/dockerfile:1
+FROM python:3.9-slim
 
-# Comments are provided throughout this file to help you get started.
-# If you need more help, visit the Dockerfile reference guide at
-# https://docs.docker.com/go/dockerfile-reference/
+# System dependencies for Containernet
+RUN apt-get update && apt-get install -y \
+    git build-essential sudo iproute2 iputils-ping netcat-openbsd net-tools curl \
+    python3-setuptools python3-pip python3-tk \
+    && rm -rf /var/lib/apt/lists/*
 
-# Want to help us make this template better? Share your feedback here: https://forms.gle/ybq9Krt8jtBL3iCk7
-
-ARG PYTHON_VERSION=3.9
-FROM python:${PYTHON_VERSION}-slim as base
-
-# Prevents Python from writing pyc files.
-ENV PYTHONDONTWRITEBYTECODE=1
-
-# Keeps Python from buffering stdout and stderr to avoid situations where
-# the application crashes without emitting any logs due to buffering.
-ENV PYTHONUNBUFFERED=1
+# Install Containernet (Mininet fork that doesn’t need OVS kernel)
+RUN git clone https://github.com/containernet/containernet.git /containernet && \
+    cd /containernet && \
+    util/install.sh -fnv
 
 WORKDIR /app
-COPY controller /app/controller
-COPY topology /app/topology
-COPY tests /app/tests
 
-# Create a non-privileged user that the app will run under.
-# See https://docs.docker.com/go/dockerfile-user-best-practices/
-ARG UID=10001
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    appuser
+# Copy project files
+COPY controller ./controller
+COPY tests ./tests
+COPY requirements.txt .
 
-# Download dependencies as a separate step to take advantage of Docker's caching.
-# Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
-# Leverage a bind mount to requirements.txt to avoid having to copy them into
-# into this layer.
-RUN --mount=type=cache,target=/root/.cache/pip \
-    --mount=type=bind,source=requirements.txt,target=requirements.txt \
-    python -m pip install -r requirements.txt
+# Python dependencies (including Ryu)
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Switch to the non-privileged user to run the application.
+# Optional non-root user
+RUN useradd -m appuser && chown -R appuser /app
 USER appuser
 
-# Copy the source code into the container.
-COPY . .
+EXPOSE 6653 8080
 
-# Expose the port that the application listens on.
-EXPOSE 8000
-
-# Run the application.
-CMD chmod +x ./run_all.sh && ./run_all.sh
+# Default command
+CMD ["tail", "-f", "/dev/null"]
