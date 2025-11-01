@@ -1,16 +1,16 @@
-from mininet.net import Containernet
+from mininet.net import Mininet
 from mininet.node import Controller, RemoteController
 from mininet.log import setLogLevel, info
 from mininet.cli import CLI
 import csv
 import time
 
-CSV_PATH = "demo_flows.csv"
-LOG_PATH = "simulation_results.log"
+CSV_PATH = "/app/tests/demo_flows.csv"
+LOG_PATH = "/app/tests/simulation_results.log"
 
 def build_topology():
     info("*** Building Containernet topology ***\n")
-    net = Containernet(controller=RemoteController)
+    net = Mininet(controller=RemoteController)
     net.addController('c0', controller=RemoteController, ip='ryu', port=6653)
 
     # Add hosts (normal containers)
@@ -21,7 +21,7 @@ def build_topology():
     ha = net.addHost('ha', ip='10.0.10.10/24')
 
     # Add simple user-space switch
-    s1 = net.addSwitch('s1')
+    s1 = net.addSwitch('s1', protocols='OpenFlow13')
 
     # Connect all hosts
     for h in (h1, h2, h3, h4, ha):

@@ -1,36 +1,37 @@
-version: "3.8"
+version: "3.9"
 
 services:
   ryu:
     image: python:3.9-slim
     container_name: ryu-controller
-    hostname: ryu
     working_dir: /app
     volumes:
       - ./controller:/app/controller
       - ./requirements.txt:/app/requirements.txt
     command: >
-      sh -c "pip install --no-cache-dir -r /app/requirements.txt &&
-             ryu-manager /app/controller/acl_controller.py --ofp-tcp-listen-port 6653"
+      sh -c "pip install 'setuptools<65' --no-cache-dir &&
+      pip install --no-cache-dir -r /app/requirements.txt &&
+      ryu-manager /app/controller/acl_controller.py --ofp-tcp-listen-port 6653"
+
     ports:
       - "6653:6653"
       - "8080:8080"
     networks:
       - sdn_network
 
-  containernet:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: containernet-topo
+  mininet:
+    image: iwaseyusuke/mininet
+    container_name: mininet-topo
     privileged: true
     depends_on:
       - ryu
     working_dir: /app
     volumes:
+      - ./topology:/app/topology
       - ./tests:/app/tests
     command: >
-      sh -c "sleep 5 && python3 /app/tests/sdn_acl_combined.py && tail -f /dev/null"
+      python3 /app/tests/stimulate_user.py &&
+      tail -f /dev/null"
     networks:
       - sdn_network
     stdin_open: true
@@ -39,6 +40,3 @@ services:
 networks:
   sdn_network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 172.28.0.0/16

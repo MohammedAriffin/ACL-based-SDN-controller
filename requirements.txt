@@ -1,2 +1,2 @@
-ryu==4.34
+ryu
 eventlet==0.30.2

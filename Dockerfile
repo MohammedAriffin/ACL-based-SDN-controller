@@ -1,31 +1,27 @@
-FROM python:3.9-slim
+# Known-good Mininet base with OVS and tools
+FROM iwaseyusuke/mininet
 
-# System dependencies for Containernet
+# Ensure Python3/pip and useful tools are present
 RUN apt-get update && apt-get install -y \
-    git build-essential sudo iproute2 iputils-ping netcat-openbsd net-tools curl \
-    python3-setuptools python3-pip python3-tk \
+    python3-pip python3-venv iputils-ping netcat-openbsd curl \
     && rm -rf /var/lib/apt/lists/*
-
-# Install Containernet (Mininet fork that doesn’t need OVS kernel)
-RUN git clone https://github.com/containernet/containernet.git /containernet && \
-    cd /containernet && \
-    util/install.sh -fnv
 
 WORKDIR /app
 
-# Copy project files
+# Copy your code
 COPY controller ./controller
 COPY tests ./tests
 COPY requirements.txt .
+COPY run_all.sh .
 
-# Python dependencies (including Ryu)
-RUN pip install --no-cache-dir -r requirements.txt
+# Install Python deps (must include ryu)
+RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Optional non-root user
-RUN useradd -m appuser && chown -R appuser /app
-USER appuser
+# Make entrypoint executable
+RUN chmod +x run_all.sh
 
+# Expose ports if you use Ryu REST as well
 EXPOSE 6653 8080
 
-# Default command
-CMD ["tail", "-f", "/dev/null"]
+# Mininet needs privileged; compose will set that
+CMD ["./run_all.sh"]
